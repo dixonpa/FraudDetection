@@ -1,0 +1,9 @@
+pandas
+numpy
+geopy
+joblib
+scikit-learn
+xgboost
+imbalanced-learn
+tqdm
+python==3.13.2

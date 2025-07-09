@@ -1,0 +1,13 @@
+# Ignorar datos y modelos pesados
+data/
+models/
+*.csv
+*.pkl
+*.joblib
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Notebooks
+.ipynb_checkpoints/
