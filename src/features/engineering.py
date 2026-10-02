@@ -1,68 +1,46 @@
+import numpy as np
 import pandas as pd
-from geopy.distance import geodesic
 
-def calculate_age (df:pd.DataFrame, column_transaccion:str = "trans_date_trans_time", column_birth:str = "dob") -> pd.DataFrame:
-    """
-    Calcula la edad de los clientes a partir de su fecha de nacimiento y la fecha de transacción.
 
-    Args:
-        df (pd.DataFrame): DataFrame que contiene las columnas de transacción y nacimiento
-        column_transaccion (str): Nombre de la columna que contiene la fecha de transacción.
-        column_birth (str): Nombre de la columna que contiene la fecha de nacimiento.
-    Returns:
-        pd.DataFrame: DataFrame con una nueva columna 'edad' que contiene la edad de los clientes.
+def calculate_age(df: pd.DataFrame) -> pd.DataFrame:
     """
-    df['transaction_date'] = pd.to_datetime(df[column_transaccion])
-    df['age'] = (df['transaction_date'] - df [column_birth]).dt.days // 365
-    df.drop(columns=['transaction_date'], inplace=True)
-    
+    Calcula la edad del cliente en el momento de la transacción.
+    """
+    df = df.copy()
+    df["age"] = (df["trans_date_trans_time"] - df["dob"]).dt.days // 365
     return df
 
-def day_of_week(df: pd.DataFrame, column_transaccion: str = "trans_date_trans_time") -> pd.DataFrame:
-    """
-    Extrae el día de la semana de la fecha de transacción.
-    Args:
-        df (pd.DataFrame): DataFrame que contiene la columna de transacción.
-        column_transaccion (str): Nombre de la columna que contiene la fecha de transacción.
-    Returns:
-        pd.DataFrame: DataFrame con una nueva columna 'day_of_week' que contiene el día de la semana.
-    """
-    df['day_of_week'] = df[column_transaccion].dt.day_of_week
 
+def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Agrega la hora del día y el día de la semana (0 = lunes) de la transacción.
+    """
+    df = df.copy()
+    df["hour"] = df["trans_date_trans_time"].dt.hour
+    df["day_of_week"] = df["trans_date_trans_time"].dt.dayofweek
     return df
 
-def hour_of_day(df: pd.DataFrame, column_transaccion: str = "trans_date_trans_time") -> pd.DataFrame:
+
+def calculate_distance(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Extrae la hora del día de la fecha de transacción.
-    Args:
-        df (pd.DataFrame): DataFrame que contiene la columna de transacción.
-        column_transaccion (str): Nombre de la columna que contiene la fecha de transacción.
-    Returns:
-        pd.DataFrame: DataFrame con una nueva columna 'hour_of_day' que contiene la hora del día.
+    Calcula la distancia en km entre el cliente y el comercio con la fórmula de Haversine.
+
+    Antes usaba geopy fila por fila, pero con más de un millón de filas era muy lento.
     """
-    df['hour_of_day'] = df[column_transaccion].dt.hour
-    
+    df = df.copy()
+    lat1, lon1 = np.radians(df["lat"]), np.radians(df["long"])
+    lat2, lon2 = np.radians(df["merch_lat"]), np.radians(df["merch_long"])
+
+    a = np.sin((lat2 - lat1) / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2) ** 2
+    df["distance_km"] = 6371 * 2 * np.arcsin(np.sqrt(a))
     return df
 
-def distance_transaction(df: pd.DataFrame, column_lat: str = "merch_lat", column_lon: str = "merch_long", column_user_lat: str = "lat", column_user_lon: str = "long") -> pd.DataFrame:
+
+def add_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Calcula la distancia entre la ubicación del comerciante y la ubicación del usuario.
-
-    Args:
-        df (pd.DataFrame): DataFrame que contiene las columnas de latitud y longitud.
-        column_lat (str): Nombre de la columna que contiene la latitud del comerciante.
-        column_lon (str): Nombre de la columna que contiene la longitud del comerciante.
-        column_user_lat (str): Nombre de la columna que contiene la latitud del usuario.
-        column_user_lon (str): Nombre de la columna que contiene la longitud del usuario.
-
-    Returns:
-        pd.DataFrame: DataFrame con una nueva columna 'distance_transaction' que contiene la distancia entre el comerciante y el usuario.
+    Aplica todas las transformaciones de feature engineering.
     """
-
-    # Calcula la distancia euclidiana entre las coordenadas del comerciante y del usuario
-    # df['distance_transaction'] = ((df[column_lat] - df[column_user_lat]) ** 2 + (df[column_lon] - df[column_user_lon]) ** 2) ** 0.5
-
-    df['distancia_km'] = df.apply(lambda row: geodesic((row['lat'], row['long']), 
-                                                   (row['merch_lat'], row['merch_long'])).km, axis=1)
-
+    df = calculate_age(df)
+    df = add_time_features(df)
+    df = calculate_distance(df)
     return df
