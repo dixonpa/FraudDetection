@@ -88,4 +88,4 @@ Python, pandas, scikit-learn, XGBoost, kagglehub, matplotlib, seaborn.
 
 ## Autor
 
-Paulo Alvarez · [LinkedIn](https://www.linkedin.com/in/paulocealva) · [Portafolio](https://dixonpa.github.io/) · palvarez17@gmail.com
+Paulo Alvarez · [LinkedIn](https://www.linkedin.com/in/paulocealva) · [Portafolio](https://dixonpa.github.io/) · palvareza17@gmail.com
