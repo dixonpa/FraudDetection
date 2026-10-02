@@ -1,129 +1,89 @@
-# Detección de Fraude en Transacciones Bancarias
+# Detección de fraude en transacciones con tarjeta
 
-## 📌 Descripción General
+Proyecto de Machine Learning para detectar transacciones fraudulentas con tarjeta de crédito. La meta era lograr **AUC-PR, F1 y F2 mayores a 0.75**.
 
-Este proyecto busca desarrollar un modelo de *machine learning* capaz de detectar transacciones fraudulentas en una entidad bancaria, superando el umbral de **0.75** en las métricas **AUC-PR**, **F1-score** y **F2-score**.  
-Los datos utilizados provienen de un conjunto público de Kaggle y contienen información detallada sobre transacciones, clientes y comercios.
+## Resultados
 
----
+El mejor modelo fue **Random Forest** con un umbral de decisión de 0.2. Estos son sus resultados con los datos de prueba (junio a diciembre 2020):
 
-## 🎯 Objetivo
+| Métrica | Valor |
+|---|---|
+| AUC-PR | 0.88 |
+| F1 | 0.82 |
+| F2 | 0.84 |
+| Recall | 0.85 |
+| Precisión | 0.79 |
 
-Predecir con alta precisión si una transacción es legítima o fraudulenta, minimizando tanto los **falsos negativos** como los **falsos positivos**, para proteger a los clientes y reducir pérdidas económicas por fraude.
+De 2145 fraudes, el modelo detecta 1817. A cambio, marca 481 transacciones normales como sospechosas, de más de 553 mil.
 
----
+![Resultados en prueba](results/figures/resultados_prueba.png)
 
-## 📊 Tabla de Resultados
+## Hallazgos principales
 
-| Modelo                  | AUC-PR | F1-score | F2-score |
-|-------------------------|--------|----------|----------|
-| Random Forest           | 0.8767 | 0.8296   | 0.8067   |
-| Random Forest con SMOTE | 0.8563 | 0.7539   | 0.8000   |
-| XGBoost                 | 0.8698 | 0.3417   | 0.5574   |
+- El fraude se concentra entre las **22:00 y las 3:59**: en esas horas la tasa de fraude está entre 1.4% y 2.9%, y en el resto del día es de 0.1%.
+- El monto mediano de un fraude es de 396 dólares, frente a 47 dólares en una transacción normal.
+- Las compras por internet (`shopping_net`, `misc_net`) tienen la tasa de fraude más alta.
+- Los mayores de 60 años tienen la tasa de fraude más alta.
 
----
+![Fraude por hora](results/figures/fraude_por_hora.png)
 
-## 🗂️ Estructura del Repositorio
+## Datos
+
+Dataset [Credit Card Transactions Fraud Detection](https://www.kaggle.com/datasets/kartik2112/fraud-detection) de Kaggle (datos simulados):
+
+- `fraudTrain.csv`: 1.3 millones de transacciones (enero 2019 a junio 2020).
+- `fraudTest.csv`: 556 mil transacciones (junio a diciembre 2020).
+
+Solo el 0.58% de las transacciones son fraude.
+
+Los archivos pesan más de 100 MB, así que no están en el repositorio. Si no están en `data/raw/`, el código los descarga automáticamente con `kagglehub`.
+
+## Qué hice
+
+1. **EDA** con los datos de entrenamiento: fraude por hora, día, edad, monto y categoría.
+2. **Variables nuevas:** edad del cliente, hora, día de la semana y distancia entre el cliente y el comercio.
+3. **Validación por fecha:** usé el último 20% del entrenamiento como validación, porque en fraude los datos tienen orden en el tiempo.
+4. **Comparé** Dummy, regresión logística, Random Forest y XGBoost con AUC-PR, F1 y F2.
+5. **Ajusté** Random Forest y elegí el umbral de decisión con los datos de validación.
+6. **Evalué** el modelo final una sola vez con `fraudTest.csv`.
+
+**Algo que corregí:** en la primera versión las gráficas por hora contaban todas las transacciones en lugar de los fraudes, y concluí que el fraude era de mediodía a medianoche. También hice el EDA con los datos de prueba, lo cual no es correcto.
+
+## Estructura
 
 ```
-/data/
-  /raw/               # Datos originales sin procesar
-  /processed/         # Datos después de limpieza y transformación
-
-/notebooks/
-  01_EDA.ipynb                # Análisis exploratorio de datos
-  02_model_training.ipynb      # Preprocesamiento, transformación y modelado.
-  03_results.ipynb           # Resultados obtenidos
-  04_proyect_complete.ipynb         # Flujo del proyecto completo
-
-/src/
-  /data/
-    data_clean.py # Script para la limpieza basica
-  /features/
-    engineering.py # Script para la creacion de variable de valor
-  /modeling/
-    models.py  # Script con 3 modelos, optimizacion y busqueda de hiperparametros
-  /preprocessing/
-    preprocessing.py  # Script para el escalado y codificacion de variables
-
-/results/
-  /figure/                   # Gráficos y visualizaciones
-  /metrics/ # Metricas de cada modelo
-  /transformers/  # Pipeline del flujo del trato de datos
-
-README.md
-requirements.txt
+FraudDetection/
+├── data/raw/                 # datos de Kaggle (no se suben a GitHub)
+├── notebooks/
+│   ├── 01_eda.ipynb          # análisis exploratorio
+│   └── 02_modelado.ipynb     # modelos, umbral y evaluación final
+├── results/figures/          # gráficos
+├── src/
+│   ├── data/                 # carga y limpieza
+│   ├── features/             # creación de variables
+│   ├── preprocessing/        # escalado y one-hot encoding
+│   └── modeling/             # métricas y umbral
+└── requirements.txt
 ```
 
----
+## Cómo ejecutarlo
 
-## 🔁 Resumen del Flujo de Trabajo
+```bash
+git clone https://github.com/dixonpa/FraudDetection.git
+cd FraudDetection
+python -m venv .venv
+.venv\Scripts\activate        # en Windows
+source .venv/bin/activate     # en Mac/Linux
+pip install -r requirements.txt
+jupyter notebook notebooks/01_eda.ipynb
+```
 
-### 🔍 Exploración de Datos (EDA)
-- Conversión de variables de fecha y hora.
-- Análisis de duplicados y relaciones entre variables.
-- Identificación de patrones temporales y grupos etarios más afectados por fraude.
-- Detección de comercios con mayor concentración de fraude.
+La primera vez, el notebook descarga los datos desde Kaggle (unos 200 MB). El notebook de modelado entrena varios modelos con más de un millón de filas y puede tardar 10 minutos o más.
 
-### 🛠️ Preprocesamiento
-- Creación de variables como edad, hora, día de la semana y distancia geográfica.
-- Eliminación de columnas irrelevantes.
-- Normalización y codificación de variables categóricas.
+## Herramientas
 
-### 🤖 Modelado
-- Entrenamiento de Random Forest, Random Forest con SMOTE y XGBoost.
-- Optimización de hiperparámetros mediante Random Search y Stratified K-Fold.
-- Evaluación mediante AUC-PR, F1-score y F2-score.
+Python, pandas, scikit-learn, XGBoost, kagglehub, matplotlib, seaborn.
 
-### 📈 Resultados
-- El modelo **Random Forest** fue el más robusto, superando el umbral de 0.75 en todas las métricas.
-- **SMOTE** no mejoró el desempeño, posiblemente por ruido en el *oversampling*.
-- **XGBoost** requiere mayor ajuste de hiperparámetros.
+## Autor
 
----
-
-## 🧠 Principales Hallazgos
-
-- Jóvenes (18–20 años) y adultos mayores (60+) tienen menos transacciones pero **mayor proporción de fraude**.
-- Comercios como `'Shopping_net'` presentan **alta concentración de fraude**, pese a no ser los de mayor volumen.
-- El modelo **Random Forest** es el más efectivo para este problema.
-
----
-
-## ✅ Recomendaciones
-
-- Implementar el modelo **Random Forest** en producción y actualizarlo periódicamente con nuevos datos.
-- Priorizar la prevención bloqueando transacciones sospechosas, aunque ocasione molestias menores a clientes legítimos.
-- Explorar otras técnicas de balanceo y ajustar hiperparámetros de **XGBoost** para futuros experimentos.
-
----
-
-## 🚀 Cómo Reproducir el Proyecto
-
-1. Clonar el repositorio:
-   ```bash
-   git clone https://github.com/dixonpa/FraudDetection.git
-   ```
-
-2. Instalar las dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Ejecutar los notebooks en el siguiente orden desde la carpeta `/notebooks/`:
-   - `01_EDA.ipynb`
-   - `02_model_training.ipynb`
-   - `03_results.ipynb`
-   - `04_proyect_complete.ipynb` *(opcional para ver todo el flujo integral)*
-
----
-
-## 👥 Créditos
-
-- **Autor**: Paulo Alvarez.
-- **Datos**: Kaggle
-
-¿Tienes preguntas o sugerencias?  
-¡No dudes en abrir un *issue* o contribuir al repositorio!
-
----
+Paulo Alvarez
