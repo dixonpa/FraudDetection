@@ -1,89 +1,91 @@
-# Detección de fraude en transacciones con tarjeta
+**English** | [Español](README.es.md)
 
-Proyecto de Machine Learning para detectar transacciones fraudulentas con tarjeta de crédito. La meta era lograr **AUC-PR, F1 y F2 mayores a 0.75**.
+# Credit Card Fraud Detection
 
-## Resultados
+Machine Learning project to detect fraudulent credit card transactions. The goal was to reach **PR-AUC, F1 and F2 above 0.75**.
 
-El mejor modelo fue **Random Forest** con un umbral de decisión de 0.2. Estos son sus resultados con los datos de prueba (junio a diciembre 2020):
+## Results
 
-| Métrica | Valor |
+The best model was **Random Forest** with a decision threshold of 0.2. These are its results on the test set (June to December 2020):
+
+| Metric | Value |
 |---|---|
-| AUC-PR | 0.88 |
+| PR-AUC | 0.88 |
 | F1 | 0.82 |
 | F2 | 0.84 |
 | Recall | 0.85 |
-| Precisión | 0.79 |
+| Precision | 0.79 |
 
-De 2145 fraudes, el modelo detecta 1817. A cambio, marca 481 transacciones normales como sospechosas, de más de 553 mil.
+Out of 2,145 frauds, the model detects 1,817. In exchange, it flags 481 normal transactions as suspicious, out of more than 553 thousand.
 
-![Resultados en prueba](results/figures/resultados_prueba.png)
+![Test results](results/figures/resultados_prueba.png)
 
-## Hallazgos principales
+## Key findings
 
-- El fraude se concentra entre las **22:00 y las 3:59**: en esas horas la tasa de fraude está entre 1.4% y 2.9%, y en el resto del día es de 0.1%.
-- El monto mediano de un fraude es de 396 dólares, frente a 47 dólares en una transacción normal.
-- Las compras por internet (`shopping_net`, `misc_net`) tienen la tasa de fraude más alta.
-- Los mayores de 60 años tienen la tasa de fraude más alta.
+- Fraud is concentrated between **10:00 PM and 3:59 AM**: in those hours the fraud rate is between 1.4% and 2.9%, while the rest of the day it is 0.1%.
+- The median amount of a fraud is 396 dollars, compared to 47 dollars for a normal transaction.
+- Online purchases (`shopping_net`, `misc_net`) have the highest fraud rate.
+- Customers over 60 have the highest fraud rate.
 
-![Fraude por hora](results/figures/fraude_por_hora.png)
+![Fraud by hour](results/figures/fraude_por_hora.png)
 
-## Datos
+## Data
 
-Dataset [Credit Card Transactions Fraud Detection](https://www.kaggle.com/datasets/kartik2112/fraud-detection) de Kaggle (datos simulados):
+[Credit Card Transactions Fraud Detection](https://www.kaggle.com/datasets/kartik2112/fraud-detection) dataset from Kaggle (simulated data):
 
-- `fraudTrain.csv`: 1.3 millones de transacciones (enero 2019 a junio 2020).
-- `fraudTest.csv`: 556 mil transacciones (junio a diciembre 2020).
+- `fraudTrain.csv`: 1.3 million transactions (January 2019 to June 2020).
+- `fraudTest.csv`: 556 thousand transactions (June to December 2020).
 
-Solo el 0.58% de las transacciones son fraude.
+Only 0.58% of the transactions are fraud.
 
-Los archivos pesan más de 100 MB, así que no están en el repositorio. Si no están en `data/raw/`, el código los descarga automáticamente con `kagglehub`.
+The files are larger than 100 MB, so they are not in the repository. If they are not in `data/raw/`, the code downloads them automatically with `kagglehub`.
 
-## Qué hice
+## What I did
 
-1. **EDA** con los datos de entrenamiento: fraude por hora, día, edad, monto y categoría.
-2. **Variables nuevas:** edad del cliente, hora, día de la semana y distancia entre el cliente y el comercio.
-3. **Validación por fecha:** usé el último 20% del entrenamiento como validación, porque en fraude los datos tienen orden en el tiempo.
-4. **Comparé** Dummy, regresión logística, Random Forest y XGBoost con AUC-PR, F1 y F2.
-5. **Ajusté** Random Forest y elegí el umbral de decisión con los datos de validación.
-6. **Evalué** el modelo final una sola vez con `fraudTest.csv`.
+1. **EDA** on the training data: fraud by hour, day, age, amount and category.
+2. **New features:** customer age, hour, day of the week and distance between the customer and the merchant.
+3. **Time-based validation:** I used the last 20% of the training data as validation, because fraud data has a time order.
+4. **Compared** Dummy, Logistic Regression, Random Forest and XGBoost with PR-AUC, F1 and F2.
+5. **Tuned** Random Forest and chose the decision threshold with the validation data.
+6. **Evaluated** the final model only once on `fraudTest.csv`.
 
-**Algo que corregí:** en la primera versión las gráficas por hora contaban todas las transacciones en lugar de los fraudes, y concluí que el fraude era de mediodía a medianoche. También hice el EDA con los datos de prueba, lo cual no es correcto.
+**Something I fixed:** in the first version the charts by hour counted all transactions instead of frauds, and I concluded that fraud happened from noon to midnight. I also did the EDA with the test data, which is not correct.
 
-## Estructura
+## Project structure
 
 ```
 FraudDetection/
-├── data/raw/                 # datos de Kaggle (no se suben a GitHub)
+├── data/raw/                 # Kaggle data (not uploaded to GitHub)
 ├── notebooks/
-│   ├── 01_eda.ipynb          # análisis exploratorio
-│   └── 02_modelado.ipynb     # modelos, umbral y evaluación final
-├── results/figures/          # gráficos
+│   ├── 01_eda.ipynb          # exploratory analysis
+│   └── 02_modelado.ipynb     # models, threshold and final evaluation
+├── results/figures/          # charts
 ├── src/
-│   ├── data/                 # carga y limpieza
-│   ├── features/             # creación de variables
-│   ├── preprocessing/        # escalado y one-hot encoding
-│   └── modeling/             # métricas y umbral
+│   ├── data/                 # loading and cleaning
+│   ├── features/             # feature engineering
+│   ├── preprocessing/        # scaling and one-hot encoding
+│   └── modeling/             # metrics and threshold
 └── requirements.txt
 ```
 
-## Cómo ejecutarlo
+## How to run it
 
 ```bash
 git clone https://github.com/dixonpa/FraudDetection.git
 cd FraudDetection
 python -m venv .venv
-.venv\Scripts\activate        # en Windows
-source .venv/bin/activate     # en Mac/Linux
+.venv\Scripts\activate        # on Windows
+source .venv/bin/activate     # on Mac/Linux
 pip install -r requirements.txt
 jupyter notebook notebooks/01_eda.ipynb
 ```
 
-La primera vez, el notebook descarga los datos desde Kaggle (unos 200 MB). El notebook de modelado entrena varios modelos con más de un millón de filas y puede tardar 10 minutos o más.
+The first time, the notebook downloads the data from Kaggle (about 200 MB). The modeling notebook trains several models with more than a million rows and can take 10 minutes or more. The notebooks and charts are in Spanish.
 
-## Herramientas
+## Tools
 
 Python, pandas, scikit-learn, XGBoost, kagglehub, matplotlib, seaborn.
 
-## Autor
+## Author
 
-Paulo Alvarez
+Paulo Alvarez · [LinkedIn](https://www.linkedin.com/in/paulocealva) · [Portfolio](https://dixonpa.github.io/) · palvarez17@gmail.com
