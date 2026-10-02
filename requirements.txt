@@ -1,9 +1,9 @@
-pandas
-numpy
-geopy
-joblib
-scikit-learn
-xgboost
-imbalanced-learn
-tqdm
-python==3.13.2
+# Versiones probadas con Python 3.14 en Windows
+pandas==2.3.3
+numpy==2.3.5
+matplotlib==3.11.2
+seaborn==0.13.2
+scikit-learn==1.7.2
+xgboost==3.4.1
+kagglehub==1.0.2
+jupyter

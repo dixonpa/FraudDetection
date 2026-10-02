@@ -1,13 +1,16 @@
-# Ignorar datos y modelos pesados
-data/
-models/
-*.csv
+# Datos y modelos (los datos se descargan desde Kaggle)
+/data/
+/models/
 *.pkl
 *.joblib
+
+# Entornos virtuales
+.venv/
+venv/
 
 # Python
 __pycache__/
 *.py[cod]
 
-# Notebooks
+# Jupyter
 .ipynb_checkpoints/
